@@ -23,18 +23,25 @@ export class SubmitFeedbackUseCase {
       throw new Error("Comment is required");
     }
 
-    if (screenshot && !screenshot.startsWith("data:image/png;base64,")) {
+    if (
+      screenshot &&
+      !screenshot.startsWith("data:image/png;base64,") &&
+      !screenshot.startsWith("data:image/jpeg;base64,")
+    ) {
       throw new Error("Screenshot must be a base64 encoded png");
     }
 
     await this.feedbacksRepository.create({ type, comment, screenshot });
     await this.mailAdapter.sendMail({
       subject: "Feedback submitted",
+      // if screenshot is not provided, we don't send it
+
       body: [
         `<html>`,
         `<div style="font-family: sans-serif; font-size: 16px; color: #111;">`,
         `<p>Tipo do feedback: ${type}</p>`,
         `<p>Comentario: ${comment}</p>`,
+        screenshot ? `<img src="${screenshot}" />` : "",
         `</div>`,
         `</html>`,
       ].join("\n"),
